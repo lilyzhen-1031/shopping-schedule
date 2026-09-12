@@ -194,11 +194,6 @@
             object-fit: cover;
             border-radius: 6px;
             border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .item-img:hover {
-            opacity: 0.8;
         }
         .editable-input {
             width: 65px;
@@ -261,33 +256,6 @@
         .summary-box .amount span {
             font-weight: 600;
         }
-        /* 圖片燈箱效果 */
-        .lightbox-modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(92, 70, 80, 0.7);
-            backdrop-filter: blur(4px);
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .lightbox-modal.active {
-            display: flex;
-        }
-        .lightbox-content {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            object-fit: contain;
-            background: #fff;
-        }
     </style>
 </head>
 <body>
@@ -344,11 +312,6 @@
     </div>
 </div>
 
-<!-- 圖片放大燈箱 -->
-<div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox()">
-    <img class="lightbox-content" id="lightboxImg">
-</div>
-
 <script>
     let shoppingList = [];
     let globalRate = 0.22;
@@ -368,7 +331,6 @@
             const savedList = localStorage.getItem(LIST_KEY);
             if (savedList) {
                 shoppingList = JSON.parse(savedList);
-                // 確保舊資料如果沒有 rate 欄位時，賦予預設值
                 shoppingList.forEach(item => {
                     if (!item.rate) item.rate = globalRate;
                 });
@@ -419,7 +381,6 @@
         let price = parseFloat(document.getElementById('itemPrice').value) || 0;
         let location = document.getElementById('itemLocation').value.trim();
         let imageInput = document.getElementById('itemImage');
-        // 抓取當前畫面的預設匯率作為此品項的獨立匯率
         let currentItemRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
 
         if (!name) { alert("請填寫物品名稱！"); return; }
@@ -461,7 +422,6 @@
         persistList();
     }
 
-    // 允許直接點擊修改該品項的獨立匯率
     function updateItemRate(index, value) {
         let val = parseFloat(value);
         shoppingList[index].rate = isNaN(val) ? 0.22 : val;
@@ -475,20 +435,6 @@
         persistList();
     }
 
-    // 開啟圖片燈箱
-    function openLightbox(src) {
-        const modal = document.getElementById('lightboxModal');
-        const img = document.getElementById('lightboxImg');
-        img.src = src;
-        modal.classList.add('active');
-    }
-
-    // 關閉圖片燈箱
-    function closeLightbox() {
-        const modal = document.getElementById('lightboxModal');
-        modal.classList.remove('active');
-    }
-
     function renderTable() {
         let tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
@@ -497,7 +443,6 @@
         document.getElementById('emptyHint').style.display = shoppingList.length === 0 ? 'block' : 'none';
 
         shoppingList.forEach((item, index) => {
-            // 每個品項使用自己的獨立匯率計算台幣
             let itemRate = item.rate || 0.22;
             let itemTwd = Math.round(item.price * itemRate);
             
@@ -513,7 +458,7 @@
 
             row.innerHTML = `
                 <td><input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${index})" style="width:16px; height:16px; accent-color: var(--primary-color);"></td>
-                <td>${item.image ? `<img src="${item.image}" class="item-img" onclick="openLightbox('${item.image}')">` : '<span style="font-size:10px; color:#ccc;">—</span>'}</td>
+                <td>${item.image ? `<img src="${item.image}" class="item-img">` : '<span style="font-size:10px; color:#ccc;">—</span>'}</td>
                 <td style="text-align: left; padding-left: 8px; ${item.checked ? 'text-decoration: line-through; color: #b0aca2;' : ''}">
                     ${item.name}
                     <br><span style="font-size:11px; color:var(--text-light);">${item.location || ''}</span>
