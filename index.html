@@ -297,7 +297,7 @@
     <div class="status-bar" id="statusBar"></div>
 
     <div class="rate-settings">
-        <div><strong>💰 匯率設定：</strong></div>
+        <div><strong>💰 預設新增匯率：</strong></div>
         <div>
             <input type="number" id="globalRate" class="rate-input" value="0.22" step="0.001" oninput="onRateChange()">
         </div>
@@ -352,8 +352,8 @@
 <script>
     let shoppingList = [];
     let globalRate = 0.22;
-    const LIST_KEY = 'foggy_blue_shop_v6';
-    const RATE_KEY = 'foggy_blue_shop_v6_rate';
+    const LIST_KEY = 'foggy_blue_shop_v7';
+    const RATE_KEY = 'foggy_blue_shop_v7_rate';
 
     function setStatus(msg, isError) {
         const el = document.getElementById('statusBar');
@@ -368,9 +368,13 @@
             const savedList = localStorage.getItem(LIST_KEY);
             if (savedList) {
                 shoppingList = JSON.parse(savedList);
+                // 確保舊資料如果沒有 rate 欄位時，賦予預設值
+                shoppingList.forEach(item => {
+                    if (!item.rate) item.rate = globalRate;
+                });
             }
         } catch (e) {
-            // 解析失敗或無資料忽略
+            // 忽略
         }
 
         try {
@@ -398,10 +402,9 @@
         }
     }
 
-    // 匯率變更並儲存
+    // 預設匯率變更並儲存
     function onRateChange() {
         globalRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
-        renderTable();
         try {
             localStorage.setItem(RATE_KEY, String(globalRate));
         } catch (e) {
@@ -416,6 +419,8 @@
         let price = parseFloat(document.getElementById('itemPrice').value) || 0;
         let location = document.getElementById('itemLocation').value.trim();
         let imageInput = document.getElementById('itemImage');
+        // 抓取當前畫面的預設匯率作為此品項的獨立匯率
+        let currentItemRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
 
         if (!name) { alert("請填寫物品名稱！"); return; }
 
@@ -424,16 +429,16 @@
 
         if (imageInput.files && imageInput.files[0]) {
             let reader = new FileReader();
-            reader.onload = function(e) { saveItem(name, price, location, e.target.result); };
+            reader.onload = function(e) { saveItem(name, price, location, e.target.result, currentItemRate); };
             reader.onerror = function() { setStatus('圖片讀取失敗', true); addBtn.disabled = false; };
             reader.readAsDataURL(imageInput.files[0]);
         } else {
-            saveItem(name, price, location, "");
+            saveItem(name, price, location, "", currentItemRate);
         }
     }
 
-    function saveItem(name, price, location, imageSrc) {
-        shoppingList.push({ name, price, location, image: imageSrc, checked: false });
+    function saveItem(name, price, location, imageSrc, itemRate) {
+        shoppingList.push({ name, price, location, image: imageSrc, rate: itemRate, checked: false });
         persistList();
         document.getElementById('itemName').value = '';
         document.getElementById('itemPrice').value = '';
@@ -452,6 +457,14 @@
     function updatePrice(index, value) {
         let val = parseFloat(value);
         shoppingList[index].price = isNaN(val) ? 0 : val;
+        renderTable();
+        persistList();
+    }
+
+    // 允許直接點擊修改該品項的獨立匯率
+    function updateItemRate(index, value) {
+        let val = parseFloat(value);
+        shoppingList[index].rate = isNaN(val) ? 0.22 : val;
         renderTable();
         persistList();
     }
@@ -478,17 +491,22 @@
 
     function renderTable() {
         let tbody = document.getElementById('tableBody');
-        let rate = globalRate;
         tbody.innerHTML = '';
         let estJpy = 0, estTwd = 0, actualJpy = 0, actualTwd = 0;
 
         document.getElementById('emptyHint').style.display = shoppingList.length === 0 ? 'block' : 'none';
 
         shoppingList.forEach((item, index) => {
-            let itemTwd = Math.round(item.price * rate);
+            // 每個品項使用自己的獨立匯率計算台幣
+            let itemRate = item.rate || 0.22;
+            let itemTwd = Math.round(item.price * itemRate);
+            
             estJpy += item.price;
             estTwd += itemTwd;
-            if (item.checked) { actualJpy += item.price; actualTwd += itemTwd; }
+            if (item.checked) { 
+                actualJpy += item.price; 
+                actualTwd += itemTwd; 
+            }
 
             let row = document.createElement('tr');
             if (item.checked) row.classList.add('checked-row');
@@ -496,7 +514,11 @@
             row.innerHTML = `
                 <td><input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${index})" style="width:16px; height:16px; accent-color: var(--primary-color);"></td>
                 <td>${item.image ? `<img src="${item.image}" class="item-img" onclick="openLightbox('${item.image}')">` : '<span style="font-size:10px; color:#ccc;">—</span>'}</td>
-                <td style="text-align: left; padding-left: 8px; ${item.checked ? 'text-decoration: line-through; color: #b0aca2;' : ''}">${item.name}<br><span style="font-size:11px; color:var(--text-light);">${item.location || ''}</span></td>
+                <td style="text-align: left; padding-left: 8px; ${item.checked ? 'text-decoration: line-through; color: #b0aca2;' : ''}">
+                    ${item.name}
+                    <br><span style="font-size:11px; color:var(--text-light);">${item.location || ''}</span>
+                    <br><span style="font-size:10px; color:#c2a8b3;">(匯率: <input type="number" class="rate-input" style="width:38px; padding:1px; font-size:10px;" value="${itemRate}" step="0.001" onchange="updateItemRate(${index}, this.value)">)</span>
+                </td>
                 <td><input type="number" class="editable-input" value="${item.price}" onchange="updatePrice(${index}, this.value)"></td>
                 <td style="font-weight: 500; color: ${item.checked ? '#b0aca2' : 'var(--text-color)'};">${itemTwd.toLocaleString()}</td>
                 <td><button class="btn-danger" onclick="deleteItem(${index})">刪</button></td>
