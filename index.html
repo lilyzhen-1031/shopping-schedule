@@ -1,61 +1,499 @@
-<!DOCTYPE html><html lang="zh-TW"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>日本旅遊專屬購物清單</title>    <style>        :root {            --bg-color: #FFF7FB; /* 甜美粉霧背景 */            --card-bg: #ffffff;            --primary-color: #d391ab; /* 粉色系主色 */            --primary-hover: #bd7591;            --accent-soft: #fbdbe9;            --text-color: #5c4650; /* 柔和深莓灰，取代死黑 */            --text-light: #a18991;            --border-color: #f3d3e0;            --success-color: #c66f92;        }
-        body {            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;            background-color: var(--bg-color);            color: var(--text-color);            margin: 0;            padding: 20px 15px;            letter-spacing: 0.5px;        }
-        .container {            max-width: 900px;            margin: 0 auto;            background: var(--card-bg);            padding: 24px 20px;            border-radius: 20px;            box-shadow: 0 10px 30px rgba(115, 130, 118, 0.08);            border: 1px solid rgba(227, 222, 214, 0.6);        }
-        h2 {            text-align: center;            color: var(--primary-color);            margin-top: 0;            font-size: 20px;            font-weight: 500;            letter-spacing: 2px;        }
-        .subtitle {            text-align: center;            color: var(--text-light);            font-size: 12px;            margin-bottom: 8px;        }
-        .status-bar {            text-align: center;            font-size: 11px;            color: var(--text-light);            margin-bottom: 18px;            min-height: 14px;        }
-        .rate-settings {            display: flex;            justify-content: flex-end;            align-items: center;            gap: 8px;            width: fit-content;            margin: 0 0 18px auto;            background: var(--bg-color);            padding: 8px 12px;            border-radius: 12px;            font-size: 12px;            border: 1px solid var(--border-color);        }
-        .input-section {            background: var(--bg-color);            padding: 16px;            border-radius: 14px;            margin-bottom: 20px;            display: flex;            flex-direction: column;            gap: 10px;            border: 1px solid var(--border-color);        }
-        .input-section input, .input-section button {            width: 100%;            box-sizing: border-box;        }
-        .input-section input {            height: 38px;            box-sizing: border-box;            padding: 10px 12px;            border: 1px solid var(--border-color);            border-radius: 8px;            font-size: 13px;            background: #fff;            outline: none;            color: var(--text-color);            transition: border-color 0.2s;        }
-        .input-section input::placeholder {            color: var(--text-light);        }
-        .input-section input:focus {            border-color: var(--primary-color);        }
-        input[type="number"]::-webkit-inner-spin-button,        input[type="number"]::-webkit-outer-spin-button {            -webkit-appearance: none;            margin: 0;        }
-        input[type="number"] {            -moz-appearance: textfield;        }
-        input[type="file"] {            border-radius: 8px;            cursor: pointer;            padding: 0 12px;            line-height: 38px;            color: var(--text-light);        }
-        input[type="file"]::file-selector-button {            background-color: var(--primary-color);            color: white;            border: none;            padding: 5px 10px;            border-radius: 20px;            font-size: 12px;            font-weight: 500;            margin-right: 10px;            cursor: pointer;            vertical-align: middle;            line-height: normal;            box-shadow: 0 4px 10px rgba(211, 145, 171, 0.35);            transition: background 0.2s;        }
-        input[type="file"]::file-selector-button:hover {            background-color: var(--primary-hover);        }
-        .btn {            background-color: var(--primary-color);            color: white;            border: none;            padding: 11px;            border-radius: 8px;            cursor: pointer;            font-weight: 500;            text-align: center;            letter-spacing: 1px;            transition: background 0.2s;        }
-        .btn:hover {            background-color: var(--primary-hover);        }
-        .btn:disabled {            opacity: 0.6;            cursor: not-allowed;        }
-        .btn-danger {            background-color: transparent;            color: #b58383;            padding: 4px 8px;            font-size: 11px;            border-radius: 6px;            border: 1px solid #e3c1c1;            cursor: pointer;            transition: all 0.2s;        }
-        .btn-danger:hover {            background-color: #b58383;            color: white;        }
-        table {            width: 100%;            border-collapse: collapse;            margin-top: 10px;            font-size: 13px;        }
-        th, td {            padding: 10px 6px;            text-align: center;            border-bottom: 1px solid var(--bg-color);            vertical-align: middle;        }
-        th {            background-color: var(--bg-color);            color: var(--primary-color);            font-weight: 500;            font-size: 12px;            letter-spacing: 1px;        }
-        .checked-row {            background-color: #faf9f6;            color: #b0aca2;        }
-        .item-img {            width: 38px;            height: 38px;            object-fit: cover;            border-radius: 6px;            border: 1px solid var(--border-color);        }
-        .editable-input {            width: 65px;            padding: 5px;            text-align: right;            border: 1px solid var(--border-color);            border-radius: 6px;            font-size: 13px;            background: #fff;            color: var(--text-color);        }
-        .rate-input {            width: 45px;            padding: 4px;            text-align: center;            border: 1px solid var(--border-color);            border-radius: 6px;            background: #fff;        }
-        .empty-hint {            text-align: center;            color: var(--text-light);            font-size: 13px;            padding: 20px 0;        }
-        /* 質感文青風總計面板 */        .summary-panel {            margin-top: 24px;            display: grid;            grid-template-columns: 1fr 1fr;            gap: 12px;        }
-        .summary-box {            background: linear-gradient(135deg, #ffffff 0%, #fcfbfa 100%);            padding: 10px 14px;            border-radius: 14px;            border: 1px solid var(--border-color);            box-shadow: 0 4px 12px rgba(0,0,0,0.02);            position: relative;            overflow: hidden;        }
-        .summary-box.actual h3 {            color: var(--success-color);        }
-        .summary-box h3 {            margin: 0 0 4px 0;            font-size: 12px;            color: var(--text-light);            font-weight: 400;            letter-spacing: 1px;        }
-        .summary-box .amount {            font-size: 14px;            font-weight: 500;            color: var(--text-color);            display: flex;            flex-direction: column;            gap: 2px;        }
-        .summary-box .amount span {            font-weight: 600;        }    </style></head><body>
-<div class="container">    <h2>啾啾啾啾啾啾蒂日本專屬購物清單🎀</h2>    <div class="subtitle">moments of wandering & collecting</div>    <div class="status-bar" id="statusBar"></div>
-    <div class="rate-settings">        <div><strong>💰 匯率設定：</strong></div>        <div>            <input type="number" id="globalRate" class="rate-input" value="0.22" step="0.001" oninput="onRateChange()">        </div>    </div>
-    <div class="input-section">        <input type="text" id="itemName" placeholder="物品名稱 (例：大耳狗吊飾)">        <input type="number" id="itemPrice" placeholder="預估日幣 (¥)">        <input type="file" id="itemImage" accept="image/*">        <input type="text" id="itemLocation" placeholder="購買地點/備註">        <button class="btn" id="addBtn" onclick="addItem()">加入清單</button>    </div>
-    <table>        <thead>            <tr>                <th style="width: 32px;">買</th>                <th style="width: 42px;">圖</th>                <th style="text-align: left; padding-left: 8px;">名稱</th>                <th style="width: 75px;">日幣 (¥)</th>                <th style="width: 75px;">台幣 (NT$)</th>                <th style="width: 38px;">刪</th>            </tr>        </thead>        <tbody id="tableBody"></tbody>    </table>    <div class="empty-hint" id="emptyHint" style="display:none;">清單目前是空的，新增第一項吧！</div>
-    <div class="summary-panel">        <div class="summary-box">            <h3>🧾 預估金額</h3>            <div class="amount">                <span>日幣 <span id="estJpy">¥0</span></span>                <span>台幣 <span id="estTwd">NT$0</span></span>            </div>        </div>        <div class="summary-box actual">            <h3>💰 最終總額</h3>            <div class="amount" style="color: var(--success-color);">                <span>日幣 <span id="actualJpy">¥0</span></span>                <span>台幣 <span id="actualTwd">NT$0</span></span>            </div>        </div>    </div></div>
-<script>    let shoppingList = [];    let globalRate = 0.22;    const LIST_KEY = 'foggy_blue_shop_v6';    const RATE_KEY = 'foggy_blue_shop_v6_rate';
-    function setStatus(msg, isError) {        const el = document.getElementById('statusBar');        el.textContent = msg || '';        el.style.color = isError ? '#b58383' : 'var(--text-light)';    }
-    async function loadData() {        setStatus('載入中...');        try {            const listResult = await window.storage.get(LIST_KEY, false);            if (listResult && listResult.value) {                shoppingList = JSON.parse(listResult.value);            }        } catch (e) {            // key doesn't exist yet, that's fine        }        try {            const rateResult = await window.storage.get(RATE_KEY, false);            if (rateResult && rateResult.value) {                globalRate = parseFloat(rateResult.value) || 0.22;            }        } catch (e) {            // key doesn't exist yet, that's fine        }        document.getElementById('globalRate').value = globalRate;        renderTable();        setStatus('');    }
-    async function persistList() {        try {            const result = await window.storage.set(LIST_KEY, JSON.stringify(shoppingList), false);            if (!result) {                setStatus('儲存失敗，請稍後再試', true);            } else {                setStatus('已儲存');                setTimeout(() => setStatus(''), 1200);            }        } catch (e) {            setStatus('儲存失敗，請稍後再試', true);        }    }
-    async function onRateChange() {        globalRate = parseFloat(document.getElementById('globalRate').value) || 0.22;        renderTable();        try {            await window.storage.set(RATE_KEY, String(globalRate), false);        } catch (e) {            setStatus('匯率儲存失敗', true);        }    }
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日本旅遊專屬購物清單</title>
+    <style>
+        :root {
+            --bg-color: #FFF7FB; /* 甜美粉霧背景 */
+            --card-bg: #ffffff;
+            --primary-color: #d391ab; /* 粉色系主色 */
+            --primary-hover: #bd7591;
+            --accent-soft: #fbdbe9;
+            --text-color: #5c4650; /* 柔和深莓灰，取代死黑 */
+            --text-light: #a18991;
+            --border-color: #f3d3e0;
+            --success-color: #c66f92;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 24px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(115, 130, 118, 0.08);
+            border: 1px solid rgba(227, 222, 214, 0.6);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .status-bar {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 18px;
+            min-height: 14px;
+        }
+
+        .rate-settings {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            width: fit-content;
+            margin: 0 0 18px auto;
+            background: var(--bg-color);
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-section {
+            background: var(--bg-color);
+            padding: 16px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .input-section input, .input-section button {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .input-section input {
+            height: 38px;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            outline: none;
+            color: var(--text-color);
+            transition: border-color 0.2s;
+        }
+
+        .input-section input::placeholder {
+            color: var(--text-light);
+        }
+
+        .input-section input:focus {
+            border-color: var(--primary-color);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="file"] {
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 0 12px;
+            line-height: 38px;
+            color: var(--text-light);
+        }
+
+        input[type="file"]::file-selector-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-right: 10px;
+            cursor: pointer;
+            vertical-align: middle;
+            line-height: normal;
+            box-shadow: 0 4px 10px rgba(211, 145, 171, 0.35);
+            transition: background 0.2s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 11px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: #b58383;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 6px;
+            border: 1px solid #e3c1c1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-danger:hover {
+            background-color: #b58383;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 10px 6px;
+            text-align: center;
+            border-bottom: 1px solid var(--bg-color);
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            font-weight: 500;
+            font-size: 12px;
+            letter-spacing: 1px;
+        }
+
+        .checked-row {
+            background-color: #faf9f6;
+            color: #b0aca2;
+        }
+
+        .item-img {
+            width: 38px;
+            height: 38px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .editable-input {
+            width: 65px;
+            padding: 5px;
+            text-align: right;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 13px;
+            background: #fff;
+            color: var(--text-color);
+        }
+
+        .rate-input {
+            width: 45px;
+            padding: 4px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .empty-hint {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 13px;
+            padding: 20px 0;
+        }
+
+        /* 質感文青風總計面板 */
+        .summary-panel {
+            margin-top: 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .summary-box {
+            background: linear-gradient(135deg, #ffffff 0%, #fcfbfa 100%);
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-box.actual h3 {
+            color: var(--success-color);
+        }
+
+        .summary-box h3 {
+            margin: 0 0 4px 0;
+            font-size: 12px;
+            color: var(--text-light);
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .summary-box .amount {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .summary-box .amount span {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>啾啾啾啾啾啾蒂日本專屬購物清單🎀</h2>
+    <div class="subtitle">moments of wandering & collecting</div>
+    <div class="status-bar" id="statusBar"></div>
+
+    <div class="rate-settings">
+        <div><strong>💰 匯率設定：</strong></div>
+        <div>
+            <input type="number" id="globalRate" class="rate-input" value="0.22" step="0.001" oninput="onRateChange()">
+        </div>
+    </div>
+
+    <div class="input-section">
+        <input type="text" id="itemName" placeholder="物品名稱 (例：大耳狗吊飾)">
+        <input type="number" id="itemPrice" placeholder="預估日幣 (¥)">
+        <input type="file" id="itemImage" accept="image/*">
+        <input type="text" id="itemLocation" placeholder="購買地點/備註">
+        <button class="btn" id="addBtn" onclick="addItem()">加入清單</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 32px;">買</th>
+                <th style="width: 42px;">圖</th>
+                <th style="text-align: left; padding-left: 8px;">名稱</th>
+                <th style="width: 75px;">日幣 (¥)</th>
+                <th style="width: 75px;">台幣 (NT$)</th>
+                <th style="width: 38px;">刪</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+    <div class="empty-hint" id="emptyHint" style="display:none;">清單目前是空的，新增第一項吧！</div>
+
+    <div class="summary-panel">
+        <div class="summary-box">
+            <h3>🧾 預估金額</h3>
+            <div class="amount">
+                <span>日幣 <span id="estJpy">¥0</span></span>
+                <span>台幣 <span id="estTwd">NT$0</span></span>
+            </div>
+        </div>
+        <div class="summary-box actual">
+            <h3>💰 最終總額</h3>
+            <div class="amount" style="color: var(--success-color);">
+                <span>日幣 <span id="actualJpy">¥0</span></span>
+                <span>台幣 <span id="actualTwd">NT$0</span></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let shoppingList = [];
+    let globalRate = 0.22;
+    const LIST_KEY = 'foggy_blue_shop_v6';
+    const RATE_KEY = 'foggy_blue_shop_v6_rate';
+
+    function setStatus(msg, isError) {
+        const el = document.getElementById('statusBar');
+        el.textContent = msg || '';
+        el.style.color = isError ? '#b58383' : 'var(--text-light)';
+    }
+
+    async function loadData() {
+        setStatus('載入中...');
+        try {
+            const listResult = await window.storage.get(LIST_KEY, false);
+            if (listResult && listResult.value) {
+                shoppingList = JSON.parse(listResult.value);
+            }
+        } catch (e) {
+            // key doesn't exist yet, that's fine
+        }
+        try {
+            const rateResult = await window.storage.get(RATE_KEY, false);
+            if (rateResult && rateResult.value) {
+                globalRate = parseFloat(rateResult.value) || 0.22;
+            }
+        } catch (e) {
+            // key doesn't exist yet, that's fine
+        }
+        document.getElementById('globalRate').value = globalRate;
+        renderTable();
+        setStatus('');
+    }
+
+    async function persistList() {
+        try {
+            const result = await window.storage.set(LIST_KEY, JSON.stringify(shoppingList), false);
+            if (!result) {
+                setStatus('儲存失敗，請稍後再試', true);
+            } else {
+                setStatus('已儲存');
+                setTimeout(() => setStatus(''), 1200);
+            }
+        } catch (e) {
+            setStatus('儲存失敗，請稍後再試', true);
+        }
+    }
+
+    async function onRateChange() {
+        globalRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
+        renderTable();
+        try {
+            await window.storage.set(RATE_KEY, String(globalRate), false);
+        } catch (e) {
+            setStatus('匯率儲存失敗', true);
+        }
+    }
+
     window.onload = function() { loadData(); };
-    function addItem() {        let name = document.getElementById('itemName').value.trim();        let price = parseFloat(document.getElementById('itemPrice').value) || 0;        let location = document.getElementById('itemLocation').value.trim();        let imageInput = document.getElementById('itemImage');
+
+    function addItem() {
+        let name = document.getElementById('itemName').value.trim();
+        let price = parseFloat(document.getElementById('itemPrice').value) || 0;
+        let location = document.getElementById('itemLocation').value.trim();
+        let imageInput = document.getElementById('itemImage');
+
         if (!name) { alert("請填寫物品名稱！"); return; }
-        const addBtn = document.getElementById('addBtn');        addBtn.disabled = true;
-        if (imageInput.files && imageInput.files[0]) {            let reader = new FileReader();            reader.onload = function(e) { saveItem(name, price, location, e.target.result); };            reader.onerror = function() { setStatus('圖片讀取失敗', true); addBtn.disabled = false; };            reader.readAsDataURL(imageInput.files[0]);        } else {            saveItem(name, price, location, "");        }    }
-    async function saveItem(name, price, location, imageSrc) {        shoppingList.push({ name, price, location, image: imageSrc, checked: false });        await persistList();        document.getElementById('itemName').value = '';        document.getElementById('itemPrice').value = '';        document.getElementById('itemLocation').value = '';        document.getElementById('itemImage').value = '';        document.getElementById('addBtn').disabled = false;        renderTable();    }
-    async function toggleCheck(index) {        shoppingList[index].checked = !shoppingList[index].checked;        renderTable();        await persistList();    }
-    async function updatePrice(index, value) {        let val = parseFloat(value);        shoppingList[index].price = isNaN(val) ? 0 : val;        renderTable();        await persistList();    }
-    async function deleteItem(index) {        shoppingList.splice(index, 1);        renderTable();        await persistList();    }
-    function renderTable() {        let tbody = document.getElementById('tableBody');        let rate = globalRate;        tbody.innerHTML = '';        let estJpy = 0, estTwd = 0, actualJpy = 0, actualTwd = 0;
+
+        const addBtn = document.getElementById('addBtn');
+        addBtn.disabled = true;
+
+        if (imageInput.files && imageInput.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function(e) { saveItem(name, price, location, e.target.result); };
+            reader.onerror = function() { setStatus('圖片讀取失敗', true); addBtn.disabled = false; };
+            reader.readAsDataURL(imageInput.files[0]);
+        } else {
+            saveItem(name, price, location, "");
+        }
+    }
+
+    async function saveItem(name, price, location, imageSrc) {
+        shoppingList.push({ name, price, location, image: imageSrc, checked: false });
+        await persistList();
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemPrice').value = '';
+        document.getElementById('itemLocation').value = '';
+        document.getElementById('itemImage').value = '';
+        document.getElementById('addBtn').disabled = false;
+        renderTable();
+    }
+
+    async function toggleCheck(index) {
+        shoppingList[index].checked = !shoppingList[index].checked;
+        renderTable();
+        await persistList();
+    }
+
+    async function updatePrice(index, value) {
+        let val = parseFloat(value);
+        shoppingList[index].price = isNaN(val) ? 0 : val;
+        renderTable();
+        await persistList();
+    }
+
+    async function deleteItem(index) {
+        shoppingList.splice(index, 1);
+        renderTable();
+        await persistList();
+    }
+
+    function renderTable() {
+        let tbody = document.getElementById('tableBody');
+        let rate = globalRate;
+        tbody.innerHTML = '';
+        let estJpy = 0, estTwd = 0, actualJpy = 0, actualTwd = 0;
+
         document.getElementById('emptyHint').style.display = shoppingList.length === 0 ? 'block' : 'none';
-        shoppingList.forEach((item, index) => {            let itemTwd = Math.round(item.price * rate);            estJpy += item.price;            estTwd += itemTwd;            if (item.checked) { actualJpy += item.price; actualTwd += itemTwd; }
-            let row = document.createElement('tr');            if (item.checked) row.classList.add('checked-row');
-            row.innerHTML = `                <td><input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${index})" style="width:16px; height:16px; accent-color: var(--primary-color);"></td>                <td>${item.image ? `<img src="${item.image}" class="item-img">` : '<span style="font-size:10px; color:#ccc;">—</span>'}</td>                <td style="text-align: left; padding-left: 8px; ${item.checked ? 'text-decoration: line-through; color: #b0aca2;' : ''}">${item.name}<br><span style="font-size:11px; color:var(--text-light);">${item.location || ''}</span></td>                <td><input type="number" class="editable-input" value="${item.price}" onchange="updatePrice(${index}, this.value)"></td>                <td style="font-weight: 500; color: ${item.checked ? '#b0aca2' : 'var(--text-color)'};">${itemTwd.toLocaleString()}</td>                <td><button class="btn-danger" onclick="deleteItem(${index})">刪</button></td>            `;            tbody.appendChild(row);        });
-        document.getElementById('estJpy').innerText = "¥ " + estJpy.toLocaleString();        document.getElementById('estTwd').innerText = "NT$ " + estTwd.toLocaleString();        document.getElementById('actualJpy').innerText = "¥ " + actualJpy.toLocaleString();        document.getElementById('actualTwd').innerText = "NT$ " + actualTwd.toLocaleString();    }</script></body></html>
+
+        shoppingList.forEach((item, index) => {
+            let itemTwd = Math.round(item.price * rate);
+            estJpy += item.price;
+            estTwd += itemTwd;
+            if (item.checked) { actualJpy += item.price; actualTwd += itemTwd; }
+
+            let row = document.createElement('tr');
+            if (item.checked) row.classList.add('checked-row');
+
+            row.innerHTML = `
+                <td><input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${index})" style="width:16px; height:16px; accent-color: var(--primary-color);"></td>
+                <td>${item.image ? `<img src="${item.image}" class="item-img">` : '<span style="font-size:10px; color:#ccc;">—</span>'}</td>
+                <td style="text-align: left; padding-left: 8px; ${item.checked ? 'text-decoration: line-through; color: #b0aca2;' : ''}">${item.name}<br><span style="font-size:11px; color:var(--text-light);">${item.location || ''}</span></td>
+                <td><input type="number" class="editable-input" value="${item.price}" onchange="updatePrice(${index}, this.value)"></td>
+                <td style="font-weight: 500; color: ${item.checked ? '#b0aca2' : 'var(--text-color)'};">${itemTwd.toLocaleString()}</td>
+                <td><button class="btn-danger" onclick="deleteItem(${index})">刪</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+
+        document.getElementById('estJpy').innerText = "¥ " + estJpy.toLocaleString();
+        document.getElementById('estTwd').innerText = "NT$ " + estTwd.toLocaleString();
+        document.getElementById('actualJpy').innerText = "¥ " + actualJpy.toLocaleString();
+        document.getElementById('actualTwd').innerText = "NT$ " + actualTwd.toLocaleString();
+    }
+</script>
+</body>
+</html>
