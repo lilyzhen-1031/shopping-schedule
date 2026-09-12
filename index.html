@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -17,7 +16,6 @@
             --border-color: #f3d3e0;
             --success-color: #c66f92;
         }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
@@ -26,7 +24,6 @@
             padding: 20px 15px;
             letter-spacing: 0.5px;
         }
-
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -36,7 +33,6 @@
             box-shadow: 0 10px 30px rgba(115, 130, 118, 0.08);
             border: 1px solid rgba(227, 222, 214, 0.6);
         }
-
         h2 {
             text-align: center;
             color: var(--primary-color);
@@ -45,14 +41,12 @@
             font-weight: 500;
             letter-spacing: 2px;
         }
-
         .subtitle {
             text-align: center;
             color: var(--text-light);
             font-size: 12px;
             margin-bottom: 8px;
         }
-
         .status-bar {
             text-align: center;
             font-size: 11px;
@@ -60,7 +54,6 @@
             margin-bottom: 18px;
             min-height: 14px;
         }
-
         .rate-settings {
             display: flex;
             justify-content: flex-end;
@@ -74,7 +67,6 @@
             font-size: 12px;
             border: 1px solid var(--border-color);
         }
-
         .input-section {
             background: var(--bg-color);
             padding: 16px;
@@ -85,12 +77,10 @@
             gap: 10px;
             border: 1px solid var(--border-color);
         }
-
         .input-section input, .input-section button {
             width: 100%;
             box-sizing: border-box;
         }
-
         .input-section input {
             height: 38px;
             box-sizing: border-box;
@@ -103,25 +93,20 @@
             color: var(--text-color);
             transition: border-color 0.2s;
         }
-
         .input-section input::placeholder {
             color: var(--text-light);
         }
-
         .input-section input:focus {
             border-color: var(--primary-color);
         }
-
         input[type="number"]::-webkit-inner-spin-button,
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
         }
-
         input[type="number"] {
             -moz-appearance: textfield;
         }
-
         input[type="file"] {
             border-radius: 8px;
             cursor: pointer;
@@ -129,7 +114,6 @@
             line-height: 38px;
             color: var(--text-light);
         }
-
         input[type="file"]::file-selector-button {
             background-color: var(--primary-color);
             color: white;
@@ -145,11 +129,9 @@
             box-shadow: 0 4px 10px rgba(211, 145, 171, 0.35);
             transition: background 0.2s;
         }
-
         input[type="file"]::file-selector-button:hover {
             background-color: var(--primary-hover);
         }
-
         .btn {
             background-color: var(--primary-color);
             color: white;
@@ -162,16 +144,13 @@
             letter-spacing: 1px;
             transition: background 0.2s;
         }
-
         .btn:hover {
             background-color: var(--primary-hover);
         }
-
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
-
         .btn-danger {
             background-color: transparent;
             color: #b58383;
@@ -182,26 +161,22 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
         .btn-danger:hover {
             background-color: #b58383;
             color: white;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
             font-size: 13px;
         }
-
         th, td {
             padding: 10px 6px;
             text-align: center;
             border-bottom: 1px solid var(--bg-color);
             vertical-align: middle;
         }
-
         th {
             background-color: var(--bg-color);
             color: var(--primary-color);
@@ -209,12 +184,10 @@
             font-size: 12px;
             letter-spacing: 1px;
         }
-
         .checked-row {
             background-color: #faf9f6;
             color: #b0aca2;
         }
-
         .item-img {
             width: 38px;
             height: 38px;
@@ -222,7 +195,6 @@
             border-radius: 6px;
             border: 1px solid var(--border-color);
         }
-
         .editable-input {
             width: 65px;
             padding: 5px;
@@ -233,7 +205,6 @@
             background: #fff;
             color: var(--text-color);
         }
-
         .rate-input {
             width: 45px;
             padding: 4px;
@@ -242,14 +213,12 @@
             border-radius: 6px;
             background: #fff;
         }
-
         .empty-hint {
             text-align: center;
             color: var(--text-light);
             font-size: 13px;
             padding: 20px 0;
         }
-
         /* 質感文青風總計面板 */
         .summary-panel {
             margin-top: 24px;
@@ -257,7 +226,6 @@
             grid-template-columns: 1fr 1fr;
             gap: 12px;
         }
-
         .summary-box {
             background: linear-gradient(135deg, #ffffff 0%, #fcfbfa 100%);
             padding: 10px 14px;
@@ -267,11 +235,9 @@
             position: relative;
             overflow: hidden;
         }
-
         .summary-box.actual h3 {
             color: var(--success-color);
         }
-
         .summary-box h3 {
             margin: 0 0 4px 0;
             font-size: 12px;
@@ -279,7 +245,6 @@
             font-weight: 400;
             letter-spacing: 1px;
         }
-
         .summary-box .amount {
             font-size: 14px;
             font-weight: 500;
@@ -288,16 +253,14 @@
             flex-direction: column;
             gap: 2px;
         }
-
         .summary-box .amount span {
             font-weight: 600;
         }
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h2>啾啾啾啾啾啾蒂日本專屬購物清單🎀</h2>
+    <h2>日本專屬購物清單🎀</h2>
     <div class="subtitle">moments of wandering & collecting</div>
     <div class="status-bar" id="statusBar"></div>
 
@@ -361,48 +324,49 @@
         el.style.color = isError ? '#b58383' : 'var(--text-light)';
     }
 
-    async function loadData() {
+    // 載入 localStorage 資料
+    function loadData() {
         setStatus('載入中...');
         try {
-            const listResult = await window.storage.get(LIST_KEY, false);
-            if (listResult && listResult.value) {
-                shoppingList = JSON.parse(listResult.value);
+            const savedList = localStorage.getItem(LIST_KEY);
+            if (savedList) {
+                shoppingList = JSON.parse(savedList);
             }
         } catch (e) {
-            // key doesn't exist yet, that's fine
+            // 解析失敗或無資料忽略
         }
+
         try {
-            const rateResult = await window.storage.get(RATE_KEY, false);
-            if (rateResult && rateResult.value) {
-                globalRate = parseFloat(rateResult.value) || 0.22;
+            const savedRate = localStorage.getItem(RATE_KEY);
+            if (savedRate) {
+                globalRate = parseFloat(savedRate) || 0.22;
             }
         } catch (e) {
-            // key doesn't exist yet, that's fine
+            // 忽略
         }
+
         document.getElementById('globalRate').value = globalRate;
         renderTable();
         setStatus('');
     }
 
-    async function persistList() {
+    // 儲存至 localStorage
+    function persistList() {
         try {
-            const result = await window.storage.set(LIST_KEY, JSON.stringify(shoppingList), false);
-            if (!result) {
-                setStatus('儲存失敗，請稍後再試', true);
-            } else {
-                setStatus('已儲存');
-                setTimeout(() => setStatus(''), 1200);
-            }
+            localStorage.setItem(LIST_KEY, JSON.stringify(shoppingList));
+            setStatus('已儲存');
+            setTimeout(() => setStatus(''), 1200);
         } catch (e) {
-            setStatus('儲存失敗，請稍後再試', true);
+            setStatus('儲存失敗（可能圖片太大）', true);
         }
     }
 
-    async function onRateChange() {
+    // 匯率變更並儲存
+    function onRateChange() {
         globalRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
         renderTable();
         try {
-            await window.storage.set(RATE_KEY, String(globalRate), false);
+            localStorage.setItem(RATE_KEY, String(globalRate));
         } catch (e) {
             setStatus('匯率儲存失敗', true);
         }
@@ -431,9 +395,9 @@
         }
     }
 
-    async function saveItem(name, price, location, imageSrc) {
+    function saveItem(name, price, location, imageSrc) {
         shoppingList.push({ name, price, location, image: imageSrc, checked: false });
-        await persistList();
+        persistList();
         document.getElementById('itemName').value = '';
         document.getElementById('itemPrice').value = '';
         document.getElementById('itemLocation').value = '';
@@ -442,23 +406,23 @@
         renderTable();
     }
 
-    async function toggleCheck(index) {
+    function toggleCheck(index) {
         shoppingList[index].checked = !shoppingList[index].checked;
         renderTable();
-        await persistList();
+        persistList();
     }
 
-    async function updatePrice(index, value) {
+    function updatePrice(index, value) {
         let val = parseFloat(value);
         shoppingList[index].price = isNaN(val) ? 0 : val;
         renderTable();
-        await persistList();
+        persistList();
     }
 
-    async function deleteItem(index) {
+    function deleteItem(index) {
         shoppingList.splice(index, 1);
         renderTable();
-        await persistList();
+        persistList();
     }
 
     function renderTable() {
