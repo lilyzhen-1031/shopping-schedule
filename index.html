@@ -6,12 +6,12 @@
     <title>日本旅遊專屬購物清單</title>
     <style>
         :root {
-            --bg-color: #FFF7FB; /* 甜美粉霧背景 */
+            --bg-color: #FFF7FB;
             --card-bg: #ffffff;
-            --primary-color: #d391ab; /* 粉色系主色 */
+            --primary-color: #d391ab;
             --primary-hover: #bd7591;
             --accent-soft: #fbdbe9;
-            --text-color: #5c4650; /* 柔和深莓灰，取代死黑 */
+            --text-color: #5c4650;
             --text-light: #a18991;
             --border-color: #f3d3e0;
             --success-color: #c66f92;
@@ -225,7 +225,6 @@
             font-size: 13px;
             padding: 20px 0;
         }
-        /* 質感文青風總計面板 */
         .summary-panel {
             margin-top: 24px;
             display: grid;
@@ -328,8 +327,8 @@
 <script>
     let shoppingList = [];
     let globalRate = 0.22;
-    const LIST_KEY = 'foggy_blue_shop_v8';
-    const RATE_KEY = 'foggy_blue_shop_v8_rate';
+    const LIST_KEY = 'foggy_blue_shop_v9';
+    const RATE_KEY = 'foggy_blue_shop_v9_rate';
 
     function setStatus(msg, isError) {
         const el = document.getElementById('statusBar');
@@ -340,7 +339,7 @@
     function loadData() {
         setStatus('載入中...');
         try {
-            const savedList = localStorage.getItem(LIST_KEY) || localStorage.getItem('foggy_blue_shop_v7');
+            const savedList = localStorage.getItem(LIST_KEY) || localStorage.getItem('foggy_blue_shop_v8') || localStorage.getItem('foggy_blue_shop_v7');
             if (savedList) {
                 shoppingList = JSON.parse(savedList);
                 shoppingList.forEach(item => {
@@ -348,18 +347,14 @@
                     if (!item.quantity) item.quantity = 1;
                 });
             }
-        } catch (e) {
-            // 忽略
-        }
+        } catch (e) {}
 
         try {
-            const savedRate = localStorage.getItem(RATE_KEY) || localStorage.getItem('foggy_blue_shop_v7_rate');
+            const savedRate = localStorage.getItem(RATE_KEY) || localStorage.getItem('foggy_blue_shop_v8_rate') || localStorage.getItem('foggy_blue_shop_v7_rate');
             if (savedRate) {
                 globalRate = parseFloat(savedRate) || 0.22;
             }
-        } catch (e) {
-            // 忽略
-        }
+        } catch (e) {}
 
         document.getElementById('globalRate').value = globalRate;
         renderTable();
@@ -372,7 +367,8 @@
             setStatus('已儲存');
             setTimeout(() => setStatus(''), 1200);
         } catch (e) {
-            setStatus('儲存失敗（可能圖片太大）', true);
+            setStatus('儲存空間不足！建議部分商品不要上傳圖片', true);
+            alert("儲存空間已滿（瀏覽器 LocalStorage 容量限制），建議部分商品不要上傳圖片，否則會無法順利儲存所有項目喔！");
         }
     }
 
@@ -380,9 +376,7 @@
         globalRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
         try {
             localStorage.setItem(RATE_KEY, String(globalRate));
-        } catch (e) {
-            setStatus('匯率儲存失敗', true);
-        }
+        } catch (e) {}
     }
 
     window.onload = function() { loadData(); };
@@ -402,12 +396,43 @@
 
         if (imageInput.files && imageInput.files[0]) {
             let reader = new FileReader();
-            reader.onload = function(e) { saveItem(name, price, qty, location, e.target.result, currentItemRate); };
+            reader.onload = function(e) {
+                // 自動壓縮圖片以防容量超標
+                compressImage(e.target.result, 200, 200, 0.7, function(compressedSrc) {
+                    saveItem(name, price, qty, location, compressedSrc, currentItemRate);
+                });
+            };
             reader.onerror = function() { setStatus('圖片讀取失敗', true); addBtn.disabled = false; };
             reader.readAsDataURL(imageInput.files[0]);
         } else {
             saveItem(name, price, qty, location, "", currentItemRate);
         }
+    }
+
+    function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) {
+        let img = new Image();
+        img.onload = function() {
+            let canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            let ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
     }
 
     function saveItem(name, price, qty, location, imageSrc, itemRate) {
