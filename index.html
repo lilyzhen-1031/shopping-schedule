@@ -325,10 +325,12 @@
 </div>
 
 <script>
+    let db = null;
     let shoppingList = [];
     let globalRate = 0.22;
-    const LIST_KEY = 'foggy_blue_shop_v9';
-    const RATE_KEY = 'foggy_blue_shop_v9_rate';
+    const DB_NAME = 'JapanShoppingDB';
+    const STORE_NAME = 'items';
+    const RATE_KEY = 'foggy_blue_shop_v10_rate';
 
     function setStatus(msg, isError) {
         const el = document.getElementById('statusBar');
@@ -336,40 +338,143 @@
         el.style.color = isError ? '#b58383' : 'var(--text-light)';
     }
 
-    function loadData() {
-        setStatus('載入中...');
-        try {
-            const savedList = localStorage.getItem(LIST_KEY) || localStorage.getItem('foggy_blue_shop_v8') || localStorage.getItem('foggy_blue_shop_v7');
-            if (savedList) {
-                shoppingList = JSON.parse(savedList);
-                shoppingList.forEach(item => {
-                    if (!item.rate) item.rate = globalRate;
-                    if (!item.quantity) item.quantity = 1;
-                });
-            }
-        } catch (e) {}
+    // 初始化 IndexedDB
+    function initDB() {
+        setStatus('資料庫連線中...');
+        let request = indexedDB.open(DB_NAME, 1);
 
-        try {
-            const savedRate = localStorage.getItem(RATE_KEY) || localStorage.getItem('foggy_blue_shop_v8_rate') || localStorage.getItem('foggy_blue_shop_v7_rate');
-            if (savedRate) {
-                globalRate = parseFloat(savedRate) || 0.22;
-            }
-        } catch (e) {}
+        request.onerror = function(event) {
+            setStatus('資料庫開啟失敗', true);
+        };
 
-        document.getElementById('globalRate').value = globalRate;
-        renderTable();
-        setStatus('');
+        request.onupgradeneeded = function(event) {
+            let database = event.target.result;
+            if (!database.objectStoreNames.contains(STORE_NAME)) {
+                database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            }
+        };
+
+        request.onsuccess = function(event) {
+            db = event.target.result;
+            
+            // 首次載入順便把舊 LocalStorage 的資料搬移過來（如果有的話）
+            migrateFromLocalStorage();
+        };
     }
 
-    function persistList() {
+    // 將舊的 LocalStorage 資料自動搬移到 IndexedDB 中
+    function migrateFromLocalStorage() {
         try {
-            localStorage.setItem(LIST_KEY, JSON.stringify(shoppingList));
+            const oldData = localStorage.getItem('foggy_blue_shop_v9') || localStorage.getItem('foggy_blue_shop_v8') || localStorage.getItem('foggy_blue_shop_v7');
+            if (oldData) {
+                let parsed = JSON.parse(oldData);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    let transaction = db.transaction([STORE_NAME], 'readwrite');
+                    let store = transaction.objectStore(STORE_NAME);
+                    
+                    store.count().onsuccess = function(e) {
+                        if (e.target.result === 0) { // 只有當 IndexedDB 是空的才搬移
+                            parsed.forEach(item => {
+                                delete item.id; // 讓系統自動給 ID
+                                store.add(item);
+                            });
+                            transaction.oncomplete = function() {
+                                localStorage.removeItem('foggy_blue_shop_v9');
+                                loadAllDataFromDB();
+                            };
+                            return;
+                        }
+                        loadAllDataFromDB();
+                    };
+                    return;
+                }
+            }
+        } catch(e) {}
+        loadAllDataFromDB();
+    }
+
+    // 從 IndexedDB 讀取所有資料
+    function loadAllDataFromDB() {
+        if (!db) return;
+        let transaction = db.transaction([STORE_NAME], 'readonly');
+        let store = transaction.objectStore(STORE_NAME);
+        let request = store.getAll();
+
+        request.onsuccess = function(event) {
+            shoppingList = event.target.result || [];
+            shoppingList.forEach(item => {
+                if (!item.rate) item.rate = globalRate;
+                if (!item.quantity) item.quantity = 1;
+            });
+            
+            // 讀取全域匯率
+            try {
+                const savedRate = localStorage.getItem(RATE_KEY);
+                if (savedRate) globalRate = parseFloat(savedRate) || 0.22;
+            } catch(e) {}
+
+            document.getElementById('globalRate').value = globalRate;
+            renderTable();
+            setStatus('');
+        };
+
+        request.onerror = function() {
+            setStatus('讀取資料失敗', true);
+        };
+    }
+
+    // 將單一項目存入 IndexedDB
+    function saveItemToDB(itemObj, callback) {
+        let transaction = db.transaction([STORE_NAME], 'readwrite');
+        let store = transaction.objectStore(STORE_NAME);
+        let request = store.add(itemObj);
+
+        request.onsuccess = function(event) {
+            itemObj.id = event.target.result;
+            shoppingList.push(itemObj);
+            if (callback) callback();
             setStatus('已儲存');
             setTimeout(() => setStatus(''), 1200);
-        } catch (e) {
-            setStatus('儲存空間不足！建議部分商品不要上傳圖片', true);
-            alert("儲存空間已滿（瀏覽器 LocalStorage 容量限制），建議部分商品不要上傳圖片，否則會無法順利儲存所有項目喔！");
+        };
+
+        request.onerror = function() {
+            setStatus('儲存失敗', true);
+            alert("儲存失敗，請確認硬碟空間是否足夠。");
+        };
+    }
+
+    // 更新資料庫中的指定項目
+    function updateItemInDB(index) {
+        let item = shoppingList[index];
+        let transaction = db.transaction([STORE_NAME], 'readwrite');
+        let store = transaction.objectStore(STORE_NAME);
+        store.put(item);
+
+        transaction.oncomplete = function() {
+            setStatus('已更新');
+            setTimeout(() => setStatus(''), 1200);
+        };
+    }
+
+    // 從資料庫中刪除指定項目
+    function deleteItemFromDB(index) {
+        let item = shoppingList[index];
+        if (!item.id) {
+            shoppingList.splice(index, 1);
+            renderTable();
+            return;
         }
+
+        let transaction = db.transaction([STORE_NAME], 'readwrite');
+        let store = transaction.objectStore(STORE_NAME);
+        store.delete(item.id);
+
+        transaction.oncomplete = function() {
+            shoppingList.splice(index, 1);
+            renderTable();
+            setStatus('已刪除');
+            setTimeout(() => setStatus(''), 1200);
+        };
     }
 
     function onRateChange() {
@@ -379,7 +484,7 @@
         } catch (e) {}
     }
 
-    window.onload = function() { loadData(); };
+    window.onload = function() { initDB(); };
 
     function addItem() {
         let name = document.getElementById('itemName').value.trim();
@@ -397,15 +502,33 @@
         if (imageInput.files && imageInput.files[0]) {
             let reader = new FileReader();
             reader.onload = function(e) {
-                // 自動壓縮圖片以防容量超標
-                compressImage(e.target.result, 200, 200, 0.7, function(compressedSrc) {
-                    saveItem(name, price, qty, location, compressedSrc, currentItemRate);
+                // 圖片壓縮優化尺寸大小
+                compressImage(e.target.result, 300, 300, 0.75, function(compressedSrc) {
+                    let newItem = { name, price, quantity: qty, location, image: compressedSrc, rate: currentItemRate, checked: false };
+                    saveItemToDB(newItem, function() {
+                        document.getElementById('itemName').value = '';
+                        document.getElementById('itemPrice').value = '';
+                        document.getElementById('itemQty').value = '1';
+                        document.getElementById('itemLocation').value = '';
+                        document.getElementById('itemImage').value = '';
+                        addBtn.disabled = false;
+                        renderTable();
+                    });
                 });
             };
             reader.onerror = function() { setStatus('圖片讀取失敗', true); addBtn.disabled = false; };
             reader.readAsDataURL(imageInput.files[0]);
         } else {
-            saveItem(name, price, qty, location, "", currentItemRate);
+            let newItem = { name, price, quantity: qty, location, image: "", rate: currentItemRate, checked: false };
+            saveItemToDB(newItem, function() {
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemPrice').value = '';
+                document.getElementById('itemQty').value = '1';
+                document.getElementById('itemLocation').value = '';
+                document.getElementById('itemImage').value = '';
+                addBtn.disabled = false;
+                renderTable();
+            });
         }
     }
 
@@ -435,49 +558,35 @@
         img.src = dataUrl;
     }
 
-    function saveItem(name, price, qty, location, imageSrc, itemRate) {
-        shoppingList.push({ name, price, quantity: qty, location, image: imageSrc, rate: itemRate, checked: false });
-        persistList();
-        document.getElementById('itemName').value = '';
-        document.getElementById('itemPrice').value = '';
-        document.getElementById('itemQty').value = '1';
-        document.getElementById('itemLocation').value = '';
-        document.getElementById('itemImage').value = '';
-        document.getElementById('addBtn').disabled = false;
-        renderTable();
-    }
-
     function toggleCheck(index) {
         shoppingList[index].checked = !shoppingList[index].checked;
         renderTable();
-        persistList();
+        updateItemInDB(index);
     }
 
     function updatePrice(index, value) {
         let val = parseFloat(value);
         shoppingList[index].price = isNaN(val) ? 0 : val;
         renderTable();
-        persistList();
+        updateItemInDB(index);
     }
 
     function updateQuantity(index, value) {
         let val = parseInt(value);
         shoppingList[index].quantity = (isNaN(val) || val < 1) ? 1 : val;
         renderTable();
-        persistList();
+        updateItemInDB(index);
     }
 
     function updateItemRate(index, value) {
         let val = parseFloat(value);
         shoppingList[index].rate = isNaN(val) ? 0.22 : val;
         renderTable();
-        persistList();
+        updateItemInDB(index);
     }
 
     function deleteItem(index) {
-        shoppingList.splice(index, 1);
-        renderTable();
-        persistList();
+        deleteItemFromDB(index);
     }
 
     function renderTable() {
