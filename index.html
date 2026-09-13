@@ -73,17 +73,19 @@
             border-radius: 14px;
             margin-bottom: 20px;
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
             gap: 10px;
             border: 1px solid var(--border-color);
         }
-        .input-section input, .input-section button {
-            width: 100%;
+        .input-section > * {
+            flex: 1 1 100%;
             box-sizing: border-box;
         }
-        .input-section input {
+        .input-section .half-width {
+            flex: 1 1 45%;
+        }
+        .input-section input, .input-section button {
             height: 38px;
-            box-sizing: border-box;
             padding: 10px 12px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -196,7 +198,7 @@
             border: 1px solid var(--border-color);
         }
         .editable-input {
-            width: 65px;
+            width: 55px;
             padding: 5px;
             text-align: right;
             border: 1px solid var(--border-color);
@@ -204,6 +206,10 @@
             font-size: 13px;
             background: #fff;
             color: var(--text-color);
+        }
+        .qty-input {
+            width: 35px;
+            text-align: center;
         }
         .rate-input {
             width: 45px;
@@ -256,6 +262,11 @@
         .summary-box .amount span {
             font-weight: 600;
         }
+        @media(max-width: 500px) {
+            th, td { padding: 8px 3px; }
+            .editable-input { width: 45px; }
+            .qty-input { width: 28px; }
+        }
     </style>
 </head>
 <body>
@@ -273,7 +284,8 @@
 
     <div class="input-section">
         <input type="text" id="itemName" placeholder="物品名稱 (例：大耳狗吊飾)">
-        <input type="number" id="itemPrice" placeholder="預估日幣 (¥)">
+        <input type="number" id="itemPrice" class="half-width" placeholder="單價預估日幣 (¥)">
+        <input type="number" id="itemQty" class="half-width" placeholder="數量" value="1" min="1">
         <input type="file" id="itemImage" accept="image/*">
         <input type="text" id="itemLocation" placeholder="購買地點/備註">
         <button class="btn" id="addBtn" onclick="addItem()">加入清單</button>
@@ -282,12 +294,13 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 32px;">買</th>
+                <th style="width: 25px;">買</th>
                 <th style="width: 42px;">圖</th>
                 <th style="text-align: left; padding-left: 8px;">名稱</th>
-                <th style="width: 75px;">日幣 (¥)</th>
-                <th style="width: 75px;">台幣 (NT$)</th>
-                <th style="width: 38px;">刪</th>
+                <th style="width: 45px;">數量</th>
+                <th style="width: 65px;">單價(¥)</th>
+                <th style="width: 75px;">總計(NT$)</th>
+                <th style="width: 35px;">刪</th>
             </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -296,14 +309,14 @@
 
     <div class="summary-panel">
         <div class="summary-box">
-            <h3>🧾 預估金額</h3>
+            <h3>🧾 預估金額 (含數量)</h3>
             <div class="amount">
                 <span>日幣 <span id="estJpy">¥0</span></span>
                 <span>台幣 <span id="estTwd">NT$0</span></span>
             </div>
         </div>
         <div class="summary-box actual">
-            <h3>💰 最終總額</h3>
+            <h3>💰 最終總額 (已買)</h3>
             <div class="amount" style="color: var(--success-color);">
                 <span>日幣 <span id="actualJpy">¥0</span></span>
                 <span>台幣 <span id="actualTwd">NT$0</span></span>
@@ -315,8 +328,8 @@
 <script>
     let shoppingList = [];
     let globalRate = 0.22;
-    const LIST_KEY = 'foggy_blue_shop_v7';
-    const RATE_KEY = 'foggy_blue_shop_v7_rate';
+    const LIST_KEY = 'foggy_blue_shop_v8';
+    const RATE_KEY = 'foggy_blue_shop_v8_rate';
 
     function setStatus(msg, isError) {
         const el = document.getElementById('statusBar');
@@ -324,15 +337,15 @@
         el.style.color = isError ? '#b58383' : 'var(--text-light)';
     }
 
-    // 載入 localStorage 資料
     function loadData() {
         setStatus('載入中...');
         try {
-            const savedList = localStorage.getItem(LIST_KEY);
+            const savedList = localStorage.getItem(LIST_KEY) || localStorage.getItem('foggy_blue_shop_v7');
             if (savedList) {
                 shoppingList = JSON.parse(savedList);
                 shoppingList.forEach(item => {
                     if (!item.rate) item.rate = globalRate;
+                    if (!item.quantity) item.quantity = 1;
                 });
             }
         } catch (e) {
@@ -340,7 +353,7 @@
         }
 
         try {
-            const savedRate = localStorage.getItem(RATE_KEY);
+            const savedRate = localStorage.getItem(RATE_KEY) || localStorage.getItem('foggy_blue_shop_v7_rate');
             if (savedRate) {
                 globalRate = parseFloat(savedRate) || 0.22;
             }
@@ -353,7 +366,6 @@
         setStatus('');
     }
 
-    // 儲存至 localStorage
     function persistList() {
         try {
             localStorage.setItem(LIST_KEY, JSON.stringify(shoppingList));
@@ -364,7 +376,6 @@
         }
     }
 
-    // 預設匯率變更並儲存
     function onRateChange() {
         globalRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
         try {
@@ -379,6 +390,7 @@
     function addItem() {
         let name = document.getElementById('itemName').value.trim();
         let price = parseFloat(document.getElementById('itemPrice').value) || 0;
+        let qty = parseInt(document.getElementById('itemQty').value) || 1;
         let location = document.getElementById('itemLocation').value.trim();
         let imageInput = document.getElementById('itemImage');
         let currentItemRate = parseFloat(document.getElementById('globalRate').value) || 0.22;
@@ -390,19 +402,20 @@
 
         if (imageInput.files && imageInput.files[0]) {
             let reader = new FileReader();
-            reader.onload = function(e) { saveItem(name, price, location, e.target.result, currentItemRate); };
+            reader.onload = function(e) { saveItem(name, price, qty, location, e.target.result, currentItemRate); };
             reader.onerror = function() { setStatus('圖片讀取失敗', true); addBtn.disabled = false; };
             reader.readAsDataURL(imageInput.files[0]);
         } else {
-            saveItem(name, price, location, "", currentItemRate);
+            saveItem(name, price, qty, location, "", currentItemRate);
         }
     }
 
-    function saveItem(name, price, location, imageSrc, itemRate) {
-        shoppingList.push({ name, price, location, image: imageSrc, rate: itemRate, checked: false });
+    function saveItem(name, price, qty, location, imageSrc, itemRate) {
+        shoppingList.push({ name, price, quantity: qty, location, image: imageSrc, rate: itemRate, checked: false });
         persistList();
         document.getElementById('itemName').value = '';
         document.getElementById('itemPrice').value = '';
+        document.getElementById('itemQty').value = '1';
         document.getElementById('itemLocation').value = '';
         document.getElementById('itemImage').value = '';
         document.getElementById('addBtn').disabled = false;
@@ -418,6 +431,13 @@
     function updatePrice(index, value) {
         let val = parseFloat(value);
         shoppingList[index].price = isNaN(val) ? 0 : val;
+        renderTable();
+        persistList();
+    }
+
+    function updateQuantity(index, value) {
+        let val = parseInt(value);
+        shoppingList[index].quantity = (isNaN(val) || val < 1) ? 1 : val;
         renderTable();
         persistList();
     }
@@ -444,13 +464,15 @@
 
         shoppingList.forEach((item, index) => {
             let itemRate = item.rate || 0.22;
-            let itemTwd = Math.round(item.price * itemRate);
+            let itemQty = item.quantity || 1;
+            let totalJpy = item.price * itemQty;
+            let totalTwd = Math.round(totalJpy * itemRate);
             
-            estJpy += item.price;
-            estTwd += itemTwd;
+            estJpy += totalJpy;
+            estTwd += totalTwd;
             if (item.checked) { 
-                actualJpy += item.price; 
-                actualTwd += itemTwd; 
+                actualJpy += totalJpy; 
+                actualTwd += totalTwd; 
             }
 
             let row = document.createElement('tr');
@@ -464,8 +486,9 @@
                     <br><span style="font-size:11px; color:var(--text-light);">${item.location || ''}</span>
                     <br><span style="font-size:10px; color:#c2a8b3;">(匯率: <input type="number" class="rate-input" style="width:38px; padding:1px; font-size:10px;" value="${itemRate}" step="0.001" onchange="updateItemRate(${index}, this.value)">)</span>
                 </td>
+                <td><input type="number" class="editable-input qty-input" value="${itemQty}" min="1" onchange="updateQuantity(${index}, this.value)"></td>
                 <td><input type="number" class="editable-input" value="${item.price}" onchange="updatePrice(${index}, this.value)"></td>
-                <td style="font-weight: 500; color: ${item.checked ? '#b0aca2' : 'var(--text-color)'};">${itemTwd.toLocaleString()}</td>
+                <td style="font-weight: 500; color: ${item.checked ? '#b0aca2' : 'var(--text-color)'};">${totalTwd.toLocaleString()}</td>
                 <td><button class="btn-danger" onclick="deleteItem(${index})">刪</button></td>
             `;
             tbody.appendChild(row);
